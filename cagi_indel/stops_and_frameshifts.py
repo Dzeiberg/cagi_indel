@@ -1,3 +1,4 @@
+from itertools import product
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
@@ -89,6 +90,44 @@ def generate_stop_gains(transcript_genbank_file: Path, seq_identifier: str) -> l
             # Append the HGVS notation to the list
             stop_gains.append(hgvs)
     return stop_gains
+
+
+def generate_frameshift_insertions(
+    transcript_genbank_file: Path, seq_identifier: str, length: int
+) -> list:
+    """
+    Generate all possible frameshift insertions from a SeqRecord object.
+
+    Args:
+        transcript_seq_record (SeqRecord): The SeqRecord object for the gene transcript containing the sequence data.
+        seq_identifier (str): The identifier for the sequence.
+        length (int): The length of the insertion.
+
+    Returns:
+        list: A list of all possible frameshift insertion variants
+    """
+    frameshift_insertions = []
+    # Parse the GenBank file
+    seq_record = parse_transcript_genbank_file(transcript_genbank_file)
+    # Extract the CDS from the SeqRecord object
+    cds_record = get_cds(seq_record)
+    # Iterate over each codon in the CDS
+    template = f"{{seq_identifier}}:c.{{insertion_left_flank}}_{{insertion_right_flank}}ins{{insertion_sequence}}"
+    nucleotides = ["A", "C", "G", "T"]
+    for insertion_left_flank in range(3, len(str(cds_record.seq)) - 3):
+        insertion_right_flank = 1 + insertion_left_flank
+        for insertion_sequence in product(nucleotides, repeat=length):
+            insertion_sequence_str = "".join(insertion_sequence)
+            # Generate the HGVS notation for the frameshift insertion
+            hgvs = template.format(
+                seq_identifier=seq_identifier,
+                insertion_left_flank=insertion_left_flank,
+                insertion_right_flank=insertion_right_flank,
+                insertion_sequence=insertion_sequence_str,
+            )
+            # Append the HGVS notation to the list
+            frameshift_insertions.append(hgvs)
+    return frameshift_insertions
 
 
 def get_snv_nonsense(codon, codon_start_pos):

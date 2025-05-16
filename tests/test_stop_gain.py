@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
-from cagi_indel.stops import generate_stop_gains
+from cagi_indel.stops_and_frameshifts import generate_stop_gains
 
 
 def test_generate_stop_gains():
